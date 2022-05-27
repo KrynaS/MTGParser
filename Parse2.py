@@ -1,6 +1,5 @@
 import json
-from turtle import color
-import xlwt
+from turtle import color, sety
 from pprint import pprint
 from xlwt import Workbook
 
@@ -97,9 +96,13 @@ dict = dict()
 data = data['data']
 
 for set in data.values():
+	if set.get('isPartialPreview', None) == True:
+		continue
 	for card in set['cards']:
 		if card['name'] == 'World Breaker':
 			stop = 0
+		if card.get('isOnlineOnly', None) == True:
+			continue
 		if dict.get(card['name']) != None:
 			if card['rarity'] not in dict[card['name']].rarity:
 				# if card['name'] == 'Serra Angel':
