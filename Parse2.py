@@ -1,7 +1,6 @@
 import json
-from turtle import color, sety
-from pprint import pprint
 from xlwt import Workbook
+from openpyxl import load_workbook
 
 def printkolory(kolory):
 	str = ""
@@ -54,13 +53,13 @@ class Karta:
 
 class Karty:
 	
-	def __init__(self, dict):
-		self.fullList = dict.values()
+	def __init__(self, dic):
+		self.fullList = dic.values()
 
-	# def __init__(self, dict1, dict2):
-	# 	for card in dict2:
-	# 		if dict1[card.name] == None:
-	# 			dict1[card.name] = card
+	# def __init__(self, dic1, dic2):
+	# 	for card in dic2:
+	# 		if dic1[card.name] == None:
+	# 			dic1[card.name] = card
 
 	def getByExactColorAndRarity(self, color, rarity):
 		result = list()
@@ -87,27 +86,31 @@ class Karty:
 			if len(karta.kolor) == 0 and karta.isLowestRarity(rarity):
 				result.append(karta)
 		result.sort(key=lambda x: x.name, reverse=False)
-		return result
-	
+		return result	
 
 f = open('AllPrintings.json', encoding='utf-8')
 data = json.load(f)
-dict = dict()
+dic = dict()
 data = data['data']
 
-for set in data.values():
-	if set.get('isPartialPreview', None) == True:
+for mset in data.values():
+	if mset.get('isPartialPreview', None) == True:
 		continue
-	for card in set['cards']:
-		if card['name'] == 'World Breaker':
+	if mset.get("name") == 'Renaissance':
+		continue
+	for card in mset['cards']:
+		if card['name'] == "Wear // Tear":
 			stop = 0
 		if card.get('isOnlineOnly', None) == True:
 			continue
-		if dict.get(card['name']) != None:
-			if card['rarity'] not in dict[card['name']].rarity:
+		if dic.get(card['name']) != None:
+			if card.get('side') != None and not set(dic.get(card['name']).kolor) >= set(card['colors']):
+				dic.get(card['name']).kolor += card['colors']
+
+			if card['rarity'] not in dic[card['name']].rarity:
 				# if card['name'] == 'Serra Angel':
 				# 	stop = 0
-				dict[card['name']].rarity.append(card['rarity'])
+				dic[card['name']].rarity.append(card['rarity'])
 		else:
 			# if card['legalities'].get('pioneer') != None and card['legalities'].get('pioneer') == 'Legal':
 			if card.get('text', None) != None and "Devoid" in card['text']:
@@ -123,11 +126,18 @@ for set in data.values():
 					if '{G}' in card['manaCost'] and 'G' not in card['colors']:
 						card['colors'].append('G')
 			karta = Karta(card['name'], card['colors'], [card['rarity']], 0)
-			dict[karta.name] = karta
+			dic[karta.name] = karta
 
-f = open('myfile','w')
+wb1 = load_workbook('karty.xlsx')
+ws1 = wb1.active
+
+for row in ws1.iter_rows(max_col=4, values_only=True):
+	if type(row[3]) == float and row[3] > 0:
+		if dic.get(row[0]) != None:
+			dic.get(row[0]).ilosc = row[3]
+
 	
-karty = Karty(dict)
+karty = Karty(dic)
 
 wb = Workbook()
 sheet = wb.add_sheet('Karty')
@@ -162,4 +172,4 @@ for r in rarity:
 		sheet.write(i, 3, x.ilosc)
 		i+=1
 
-wb.save('karty.xls')
+wb.save('kartynew.xls')
