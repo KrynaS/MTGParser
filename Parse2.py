@@ -30,11 +30,12 @@ def printRarity(rarity):
 
 class Karta:
 
-	def __init__(self, name, kolor, rarity, ilosc):
+	def __init__(self, name, kolor, rarity, ilosc, misc):
 		self.name = name
 		self.kolor = kolor
 		self.rarity = rarity
 		self.ilosc = ilosc
+		self.misc = misc
 
 	def isLowestRarity(self, rarity):
 
@@ -99,12 +100,14 @@ for mset in data.values():
 	if mset.get("name") == 'Renaissance':
 		continue
 	for card in mset['cards']:
+		if card['name'] == "Archangel Avacyn // Avacyn, the Purifier":
+			stop = 0
 		if card['name'] == "Wear // Tear":
 			stop = 0
 		if card.get('isOnlineOnly', None) == True:
 			continue
 		if dic.get(card['name']) != None:
-			if card.get('side') != None and not set(dic.get(card['name']).kolor) >= set(card['colors']):
+			if card.get('side') != None and not set(dic.get(card['name']).kolor) >= set(card['colors']) and card.get("manaCost") != None:
 				dic.get(card['name']).kolor += card['colors']
 
 			if card['rarity'] not in dic[card['name']].rarity:
@@ -125,16 +128,17 @@ for mset in data.values():
 						card['colors'].append('R')
 					if '{G}' in card['manaCost'] and 'G' not in card['colors']:
 						card['colors'].append('G')
-			karta = Karta(card['name'], card['colors'], [card['rarity']], 0)
+			karta = Karta(card['name'], card['colors'], [card['rarity']], 0, "")
 			dic[karta.name] = karta
 
 wb1 = load_workbook('karty.xlsx')
 ws1 = wb1.active
 
-for row in ws1.iter_rows(max_col=4, values_only=True):
+for row in ws1.iter_rows(max_col=5, values_only=True):
 	if type(row[3]) == float and row[3] > 0:
 		if dic.get(row[0]) != None:
 			dic.get(row[0]).ilosc = row[3]
+			dic.get(row[0]).misc = row[4]
 
 	
 karty = Karty(dic)
@@ -154,6 +158,7 @@ for k in kolory:
 			sheet.write(i, 1, x.kolor)
 			sheet.write(i, 2, printRarity(x.rarity))
 			sheet.write(i, 3, x.ilosc)
+			sheet.write(i, 4, x.misc)
 			i+=1
 
 for r in rarity:
@@ -162,6 +167,7 @@ for r in rarity:
 		sheet.write(i, 1, x.kolor)
 		sheet.write(i, 2, printRarity(x.rarity))
 		sheet.write(i, 3, x.ilosc)
+		sheet.write(i, 4, x.misc)
 		i+=1
 
 for r in rarity:
@@ -170,6 +176,7 @@ for r in rarity:
 		sheet.write(i, 1, x.kolor)
 		sheet.write(i, 2, printRarity(x.rarity))
 		sheet.write(i, 3, x.ilosc)
+		sheet.write(i, 4, x.misc)
 		i+=1
 
 wb.save('kartynew.xls')
